@@ -66,3 +66,13 @@ check_azure_cli() {
         return 1
     fi
 }
+
+set_azure_subscription() {
+
+    local subscription_id="$1"
+
+    if ! az account set --subscription "${subscription_id}"; then
+        log_error "Could not set Azure subscription: ${subscription_id}"
+        return 1
+    fi
+}

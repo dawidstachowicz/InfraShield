@@ -29,3 +29,6 @@ load_environment "${ENV_FILE}" || exit 1
 
 # Check if Azure CLI is ready
 check_azure_cli || exit 1
+
+#Set Azure Subscription ID
+set_azure_subscription "${AZURE_SUBSCRIPTION_ID}" || exit 1
