@@ -155,3 +155,23 @@ for ip in "${IP_LIST[@]+"${IP_LIST[@]}"}"; do
         log_info "IP rule added: ${ip}"
     fi
 done
+
+# Check if the target Blob container exists using Azure AD authentication
+CHECK_CONTAINER_EXISTS=$(az storage container exists \
+    --name "${AZURE_CONTAINER_NAME}" \
+    --account-name "${AZURE_STORAGE_ACCOUNT_NAME}" \
+    --auth-mode login \
+    --query exists -o tsv)
+
+# Create container if it does not already exist
+if [[ "${CHECK_CONTAINER_EXISTS}" != true ]]; then
+    # Create private Blob container for storing Terraform state files
+    az storage container create --name "${AZURE_CONTAINER_NAME}" \
+        --account-name "${AZURE_STORAGE_ACCOUNT_NAME}" \
+        --auth-mode login \
+        --public-access off \
+        -o none
+else
+    # Log informational message if container is already present
+    log_info "Container already exists, skipping: ${AZURE_CONTAINER_NAME}"
+fi
