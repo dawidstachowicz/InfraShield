@@ -1,0 +1,64 @@
+# Terraform: working directory
+**/.terraform/*
+
+# Terraform: state files
+*.tfstate
+*.tfstate.*
+
+# Terraform: crash logs
+crash.log
+crash.*.log
+
+# Terraform: variable files (may contain secrets)
+*.tfvars
+*.tfvars.json
+
+# Terraform: override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform: transient state lock information
+.terraform.tfstate.lock.info
+
+# Terraform: saved plans (may contain sensitive data)
+*.tfplan
+planout
+
+# Terraform: CLI configuration
+.terraformrc
+terraform.rc
+
+# Ansible: logs and temporary files
+ansible.log
+*.retry
+**/__pycache__/
+
+# Secrets and private keys
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+*.cer
+*.pub
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+vault-password-file
+
+# Ignore any .env file in the root or any subdirectory but allow tracking of template configuration files
+**/.env
+**/.env.*
+!**/.env.example
+
+# Local secrets directory
+secrets/
+
+# IDE and operating system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
