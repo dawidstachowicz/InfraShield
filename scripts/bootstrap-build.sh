@@ -115,3 +115,43 @@ if [[ -z "${AZ_STORAGE_ACCOUNT_EXISTS}" ]]; then
 else
     log_info "Storage account already exists, skipping: ${AZURE_STORAGE_ACCOUNT_NAME}"
 fi
+
+# Initialize array to store target IP addresses or CIDR ranges for firewall rules
+IP_LIST=()
+
+# Parse comma-separated IP addresses from ALLOWED_PUBLIC_IPS environment variable if set
+if [[ -n "${ALLOWED_PUBLIC_IPS}" ]]; then
+    IFS=',' read -ra EXTRA_IPS <<< "${ALLOWED_PUBLIC_IPS}"
+    for ip in "${EXTRA_IPS[@]}"; do
+        ip="${ip// /}"
+        [[ -n "${ip}" ]] && IP_LIST+=("${ip}")
+    done
+fi
+
+# Automatically detect current external public IP address if enabled
+if [[ "${AUTO_DETECT_PUBLIC_IP}" == "true" ]]; then
+    PUBLIC_IP="$(curl -fsS --max-time 10 ifconfig.me)"
+    IP_LIST+=("${PUBLIC_IP}")
+fi
+
+# Fetch existing allowed IP rules from Azure Storage Account in TSV format
+EXISTING_IPS=$(az storage account network-rule list \
+    --account-name "${AZURE_STORAGE_ACCOUNT_NAME}" \
+    --resource-group "${AZ_GROUP_NAME}" \
+    --query "ipRules[].ipAddressOrRange" -o tsv)
+
+# Safely iterate over the IP array (unbound array protective expansion syntax)
+for ip in "${IP_LIST[@]+"${IP_LIST[@]}"}"; do
+    # Strip trailing /32 subnet notation to allow exact IP string comparison
+    if grep -qxF "${ip%/32}" <<< "${EXISTING_IPS}"; then
+        log_info "IP rule already exists, skipping: ${ip}"
+    else
+        # Append new IP address or CIDR range to Storage Account network firewall
+        az storage account network-rule add \
+            --resource-group "${AZ_GROUP_NAME}" \
+            --account-name "${AZURE_STORAGE_ACCOUNT_NAME}" \
+            --ip-address "${ip}" \
+            -o none
+        log_info "IP rule added: ${ip}"
+    fi
+done
