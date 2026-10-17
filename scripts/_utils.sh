@@ -41,3 +41,16 @@ log_error() {
     local message="$1"
     printf "[%b%s%b] %s\n" "${COLOR_RED}" "ERROR" "${COLOR_RESET}" "${message}" >&2
 }
+
+load_environment() {
+    local env_file="$1"
+
+    if [[ ! -f "${env_file}" ]]; then
+        log_error "Missing required .env file. Rename bootstrap.env.example to .env and configure variables."
+        return 1
+    fi
+
+    # shellcheck source=/dev/null
+    # .env is gitignored (secrets) and absent on fresh clones; intentionally not analyzed.
+    source "${env_file}"
+}
