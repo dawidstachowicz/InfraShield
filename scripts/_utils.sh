@@ -54,3 +54,15 @@ load_environment() {
     # .env is gitignored (secrets) and absent on fresh clones; intentionally not analyzed.
     source "${env_file}"
 }
+
+check_azure_cli() {
+    if ! command -v az &>/dev/null; then
+        log_error "Azure CLI (az) is not installed. Please install it first."
+        return 1
+    fi
+
+    if ! az account show &>/dev/null; then
+        log_error "You are not logged in to Azure CLI. Run az login first."
+        return 1
+    fi
+}

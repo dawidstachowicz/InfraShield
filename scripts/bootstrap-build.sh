@@ -26,3 +26,6 @@ source "${COMMON_SCRIPT}"
 
 #Load .env file
 load_environment "${ENV_FILE}" || exit 1
+
+# Check if Azure CLI is ready
+check_azure_cli || exit 1
