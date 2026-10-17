@@ -92,7 +92,7 @@ if [[ -z "${AZ_STORAGE_ACCOUNT_EXISTS}" ]]; then
         log_error "Storage account name is taken globally: ${AZURE_STORAGE_ACCOUNT_NAME}"
         exit 1
     fi
-    
+
     # Create secure Azure Storage Account with production security controls
     az storage account create  \
     --name "${AZURE_STORAGE_ACCOUNT_NAME}" \
@@ -112,4 +112,6 @@ if [[ -z "${AZ_STORAGE_ACCOUNT_EXISTS}" ]]; then
     --sku Standard_LRS \
     --tags "${AZ_RESOURCE_TAGS[@]}" \
     -o none
+else
+    log_info "Storage account already exists, skipping: ${AZURE_STORAGE_ACCOUNT_NAME}"
 fi
