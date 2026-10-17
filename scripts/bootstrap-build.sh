@@ -33,8 +33,11 @@ check_azure_cli || exit 1
 #Set Azure Subscription ID
 set_azure_subscription "${AZURE_SUBSCRIPTION_ID}" || exit 1
 
+# Construct target Azure Resource Group name and check its existence
 AZ_GROUP_NAME="rg-${PROJECT}-tfstate-${AZURE_LOCATION}-${RESOURCE_SEQUENCE}"
 AZ_GROUP_EXISTS=$(az group exists --name "${AZ_GROUP_NAME}" -o tsv)
+
+# Define standardized Azure resource tags
 AZ_RESOURCE_TAGS=(
     "Project=${TAG_PROJECT}"
     "Purpose=${TAG_PURPOSE}"
@@ -43,9 +46,24 @@ AZ_RESOURCE_TAGS=(
     "Owner=${TAG_OWNER}"
 )
 
-if  [[ "${AZ_GROUP_EXISTS}" == "true" ]]; then
-    log_error "This resource group already exists ${AZ_GROUP_NAME}"
-    exit 1
+# Create Resource Group if it does not already exist
+if [[ "${AZ_GROUP_EXISTS}" != "true" ]]; then
+    az group create --name "${AZ_GROUP_NAME}" --location "${AZURE_LOCATION}" --tags "${AZ_RESOURCE_TAGS[@]}" -o none
+else
+    log_info "Resource group already exists, skipping: ${AZ_GROUP_NAME}"
 fi
 
-az group create --name "${AZ_GROUP_NAME}" --location "${AZURE_LOCATION}" --tags "${AZ_RESOURCE_TAGS[@]}" -o none
+# Construct lock name and verify if CanNotDelete lock is present
+AZ_LOCK_NAME="lock-${AZ_GROUP_NAME}-cannotdelete"
+AZ_LOCK_EXISTS=$(az lock list --resource-group "${AZ_GROUP_NAME}" --query "[?level=='CanNotDelete'].name" -o tsv)
+
+# Apply CanNotDelete lock to protect Resource Group from accidental deletion
+if [[ -z "${AZ_LOCK_EXISTS}" ]]; then
+    az lock create -o none \
+      --name "${AZ_LOCK_NAME}" \
+      --lock-type CanNotDelete \
+      --resource-group "${AZ_GROUP_NAME}" \
+      --notes "Protects the Terraform state resource group from accidental deletion."
+else
+    log_info "Resource group lock already exists, skipping: ${AZ_LOCK_NAME}"
+fi
