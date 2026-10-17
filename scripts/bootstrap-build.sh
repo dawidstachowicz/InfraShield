@@ -32,3 +32,20 @@ check_azure_cli || exit 1
 
 #Set Azure Subscription ID
 set_azure_subscription "${AZURE_SUBSCRIPTION_ID}" || exit 1
+
+AZ_GROUP_NAME="rg-${PROJECT}-tfstate-${AZURE_LOCATION}-${RESOURCE_SEQUENCE}"
+AZ_GROUP_EXISTS=$(az group exists --name "${AZ_GROUP_NAME}" -o tsv)
+AZ_RESOURCE_TAGS=(
+    "Project=${TAG_PROJECT}"
+    "Purpose=${TAG_PURPOSE}"
+    "ManagedBy=${TAG_MANAGED_BY}"
+    "Component=${TAG_COMPONENT}"
+    "Owner=${TAG_OWNER}"
+)
+
+if  [[ "${AZ_GROUP_EXISTS}" == "true" ]]; then
+    log_error "This resource group already exists ${AZ_GROUP_NAME}"
+    exit 1
+fi
+
+az group create --name "${AZ_GROUP_NAME}" --location "${AZURE_LOCATION}" --tags "${AZ_RESOURCE_TAGS[@]}" -o none
