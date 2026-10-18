@@ -68,13 +68,6 @@ else
     log_info "Resource group lock already exists, skipping: ${AZ_LOCK_NAME}"
 fi
 
-
-# Validate Storage Account name format (3-24 lowercase alphanumeric characters)
-if [[ ! "${AZURE_STORAGE_ACCOUNT_NAME}" =~ ^[a-z0-9]{3,24}$ ]]; then
-    log_error "Invalid storage account name (3-24 chars, lowercase letters and digits only): ${AZURE_STORAGE_ACCOUNT_NAME}"
-    exit 1
-fi
-
 # Check if the Storage Account already exists in the target Resource Group
 AZ_STORAGE_ACCOUNT_EXISTS=$(az storage account list \
     --resource-group "${AZ_GROUP_NAME}" \
@@ -83,15 +76,6 @@ AZ_STORAGE_ACCOUNT_EXISTS=$(az storage account list \
 
 # Create Storage Account if it does not exist in the Resource Group
 if [[ -z "${AZ_STORAGE_ACCOUNT_EXISTS}" ]]; then
-    NAME_AVAILABLE=$(az storage account check-name \
-        --name "${AZURE_STORAGE_ACCOUNT_NAME}" \
-        --query nameAvailable -o tsv)
-
-    # Fail if the name is already occupied globally by another account
-    if [[ "${NAME_AVAILABLE}" != "true" ]]; then
-        log_error "Storage account name is taken globally: ${AZURE_STORAGE_ACCOUNT_NAME}"
-        exit 1
-    fi
 
     # Create secure Azure Storage Account with production security controls
     az storage account create  \
