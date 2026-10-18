@@ -167,3 +167,5 @@ else
     # Log informational message if container is already present
     log_info "Container already exists, skipping: ${AZURE_CONTAINER_NAME}"
 fi
+
+log_info "Bootstrap complete: ${AZ_GROUP_NAME} / ${AZURE_STORAGE_ACCOUNT_NAME} / ${AZURE_CONTAINER_NAME}"
