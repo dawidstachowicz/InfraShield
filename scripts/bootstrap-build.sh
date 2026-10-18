@@ -148,24 +148,6 @@ else
     log_info "Role assignment already exists, skipping: ${ROLE_NAME}"
 fi
 
-# Role propagation to the data plane can take a few minutes on a fresh account
-CONTAINER_CHECK_OK=false
-for attempt in 1 2 3 4 5 6; do
-    if az storage container exists --name "${AZURE_CONTAINER_NAME}" \
-        --account-name "${AZURE_STORAGE_ACCOUNT_NAME}" --auth-mode login \
-        --query exists -o tsv >/dev/null; then
-        CONTAINER_CHECK_OK=true
-        break
-    fi
-    log_info "Data-plane access not ready yet (attempt ${attempt}/6), waiting 30s"
-    sleep 30
-done
-
-if [[ "${CONTAINER_CHECK_OK}" != true ]]; then
-    log_error "Blob data access still denied after waiting. Check role assignment and network rules."
-    exit 1
-fi
-
 # Check if the target Blob container exists using Azure AD authentication
 CHECK_CONTAINER_EXISTS=$(az storage container exists \
     --name "${AZURE_CONTAINER_NAME}" \
