@@ -53,5 +53,6 @@ if [[ -n "${AZ_LOCK_GROUP_EXISTS}" ]]; then
     az lock delete --name "${AZ_LOCK_GROUP_EXISTS}" --resource-group "${AZ_GROUP_NAME}"
 fi
 
-#Delete Resource Group
+# Delete Resource Group
 az group delete --name "${AZ_GROUP_NAME}" --yes
+log_info "Resource group deleted: ${AZ_GROUP_NAME}"
